@@ -9,8 +9,8 @@
 - [x] Create Git Repository.
 - [x] Define Project Specifications (`SPECIFICATIONS.md`).
 - [x] Create Project Plan (`PROJECT_PLAN.md`).
-- [ ] Initialize Node.js project structure (`package.json`, folder hierarchy).
-- [ ] Initialize React project structure.
+- [x] Initialize Node.js project structure (`package.json`, folder hierarchy).
+- [] Initialize React project structure.
 
 ### Phase 2: Backend Implementation (Due: 06.12.2025)
 
@@ -18,8 +18,8 @@
 
 #### Week 1: Database & Auth
 
-- [ ] Setup MariaDB database connection.
-- [ ] Configure Sequelize ORM.
+- [x] Setup MariaDB database connection.
+- [x] Configure Sequelize ORM.
 - [ ] Define User and Note models.
 - [ ] Implement Registration (with `@stud.ase.ro` regex validation).
 - [ ] Implement Login (JWT generation).
@@ -65,9 +65,9 @@
 - [ ] Bug Fixing: Ensure all edge cases are handled.
 - [ ] Styling: Finalize CSS/Bootstrap design for mobile responsiveness.
 - [ ] Deployment:
-	- Deploy Database
-	- Deploy Backend
-	- Deploy Frontend
+  - Deploy Database
+  - Deploy Backend
+  - Deploy Frontend
 - [ ] Demo Prep: Prepare presentation for the final laboratory.
 
 ## Risk Management
