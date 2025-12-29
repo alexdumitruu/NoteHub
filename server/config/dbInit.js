@@ -31,24 +31,35 @@ async function Create_DB() {
 
 function FK_Config() {
   // =============================================
-  // FOREIGN KEY RELATIONSHIPS (Phase 2)
+  // FOREIGN KEY RELATIONSHIPS
   // =============================================
-  // Uncomment and configure when models are defined
+
+  const User = require('../models/User');
+  const Course = require('../models/Course');
+  const Note = require('../models/Note');
+  const Attachment = require('../models/Attachment');
+  const StudyGroup = require('../models/StudyGroup');
+  const GroupMember = require('../models/GroupMember');
+
   // -------------------------- User -> Notes (1-n) --------------------------
-  // User.hasMany(Note, { as: 'Notes', foreignKey: 'user_id' });
-  // Note.belongsTo(User, { foreignKey: 'user_id' });
+  User.hasMany(Note, { as: 'Notes', foreignKey: 'user_id' });
+  Note.belongsTo(User, { foreignKey: 'user_id' });
+
   // -------------------------- Course -> Notes (1-n) --------------------------
-  // Course.hasMany(Note, { as: 'Notes', foreignKey: 'course_id' });
-  // Note.belongsTo(Course, { foreignKey: 'course_id' });
+  Course.hasMany(Note, { as: 'Notes', foreignKey: 'course_id' });
+  Note.belongsTo(Course, { foreignKey: 'course_id' });
+
   // -------------------------- Note -> Attachments (1-n) --------------------------
-  // Note.hasMany(Attachment, { as: 'Attachments', foreignKey: 'note_id' });
-  // Attachment.belongsTo(Note, { foreignKey: 'note_id' });
+  Note.hasMany(Attachment, { as: 'Attachments', foreignKey: 'note_id' });
+  Attachment.belongsTo(Note, { foreignKey: 'note_id' });
+
   // -------------------------- User -> StudyGroups (1-n as admin) --------------------------
-  // User.hasMany(StudyGroup, { as: 'AdminGroups', foreignKey: 'admin_user_id' });
-  // StudyGroup.belongsTo(User, { as: 'Admin', foreignKey: 'admin_user_id' });
+  User.hasMany(StudyGroup, { as: 'AdminGroups', foreignKey: 'admin_user_id' });
+  StudyGroup.belongsTo(User, { as: 'Admin', foreignKey: 'admin_user_id' });
+
   // -------------------------- StudyGroup <-> User (n-n via GroupMember) --------------------------
-  // StudyGroup.belongsToMany(User, { through: GroupMember, as: 'Members', foreignKey: 'group_id' });
-  // User.belongsToMany(StudyGroup, { through: GroupMember, as: 'Groups', foreignKey: 'user_id' });
+  StudyGroup.belongsToMany(User, { through: GroupMember, as: 'Members', foreignKey: 'group_id' });
+  User.belongsToMany(StudyGroup, { through: GroupMember, as: 'Groups', foreignKey: 'user_id' });
 }
 
 async function DB_Init() {
