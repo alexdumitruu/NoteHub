@@ -98,7 +98,7 @@ function NotesPage() {
         {/* Notes List */}
         <Col md={4}>
           <Card className="shadow-sm border-0">
-            <Card.Header className="bg-white">
+            <Card.Header>
               <InputGroup>
                 <Form.Control
                   placeholder="Search notes..."
@@ -150,7 +150,7 @@ function NotesPage() {
         <Col md={8}>
           {selectedNote ? (
             <Card className="shadow-sm border-0">
-              <Card.Header className="bg-white d-flex justify-content-between align-items-center">
+              <Card.Header className="d-flex justify-content-between align-items-center">
                 <h4 className="mb-0">{selectedNote.title}</h4>
                 <div>
                   <Button

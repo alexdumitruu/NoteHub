@@ -1,12 +1,27 @@
+import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { Nav, Button } from 'react-bootstrap';
 import { logout } from '../../features/auth/authSlice';
+import { FaMoon, FaSun } from 'react-icons/fa';
 
 function Sidebar() {
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [darkMode, setDarkMode] = useState(localStorage.getItem('theme') === 'dark');
+
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-mode');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.body.classList.remove('dark-mode');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
+
+  const toggleDarkMode = () => setDarkMode(!darkMode);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -14,18 +29,26 @@ function Sidebar() {
   };
 
   const navLinkStyle = ({ isActive }) => ({
-    color: isActive ? '#0d6efd' : '#6c757d',
-    backgroundColor: isActive ? '#e7f1ff' : 'transparent',
+    color: isActive ? '#0d6efd' : (darkMode ? '#adb5bd' : '#6c757d'),
+    backgroundColor: isActive ? (darkMode ? '#0d6efd20' : '#e7f1ff') : 'transparent',
   });
 
   return (
     <div 
-      className="d-flex flex-column bg-light border-end" 
-      style={{ width: '250px', minHeight: '100vh' }}
+      className={`d-flex flex-column border-end ${darkMode ? 'bg-dark text-white border-secondary' : 'bg-light'}`} 
+      style={{ width: '250px', minHeight: '100vh', transition: 'all 0.3s' }}
     >
       {/* Brand */}
-      <div className="p-3 border-bottom">
+      <div className={`p-3 border-bottom ${darkMode ? 'border-secondary' : ''} d-flex justify-content-between align-items-center`}>
         <h4 className="mb-0 text-primary">📚 NoteHub</h4>
+        <Button 
+          variant={darkMode ? "outline-light" : "outline-dark"} 
+          size="sm" 
+          onClick={toggleDarkMode}
+          title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          {darkMode ? <FaSun /> : <FaMoon />}
+        </Button>
       </div>
 
       {/* User Info */}

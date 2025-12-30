@@ -5,7 +5,7 @@ function MainLayout() {
   return (
     <div className="d-flex">
       <Sidebar />
-      <main className="flex-grow-1 p-4" style={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
+      <main className="flex-grow-1 p-4" style={{ minHeight: '100vh' }}>
         <Outlet />
       </main>
     </div>

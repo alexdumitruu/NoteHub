@@ -2,6 +2,72 @@
 
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  transition: background-color 0.3s, color 0.3s;
+  background-color: #f8f9fa;
+}
+
+body.dark-mode {
+  background-color: #212529;
+  color: #f8f9fa;
+}
+
+body.dark-mode .card {
+  background-color: #343a40;
+  color: #f8f9fa;
+  border-color: #495057;
+}
+
+body.dark-mode .card-header {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-bottom-color: #495057;
+}
+
+body.dark-mode .text-muted {
+  color: #adb5bd !important;
+}
+
+body.dark-mode .border-bottom,
+body.dark-mode .border-top,
+body.dark-mode .border-end,
+body.dark-mode .border {
+  border-color: #495057 !important;
+}
+
+body.dark-mode .form-control {
+  background-color: #2b3035;
+  border-color: #495057;
+  color: #fff;
+}
+
+body.dark-mode .form-control:focus {
+  background-color: #2b3035;
+  color: #fff;
+}
+
+body.dark-mode .form-control::placeholder {
+  color: #adb5bd;
+  opacity: 1;
+}
+
+body.dark-mode .markdown-preview code,
+body.dark-mode .markdown-preview pre {
+  background-color: #2b3035;
+  color: #e9ecef;
+}
+
+body.dark-mode .markdown-preview blockquote {
+  color: #adb5bd;
+}
+
+body.dark-mode .list-group-item {
+  background-color: #343a40;
+  color: #f8f9fa;
+  border-color: #495057;
+}
+
+body.dark-mode .list-group-item-action:hover {
+  background-color: #495057;
+  color: #fff;
 }
 
 /* Markdown Preview Styles */

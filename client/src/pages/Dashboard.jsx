@@ -22,7 +22,9 @@ function Dashboard() {
   }
 
   const recentNotes = notes.slice(0, 5);
-  const totalGroups = memberOf.length + adminOf.length;
+  // Calculate unique groups (admin groups are usually included in memberOf, but we want to be safe)
+  const allGroupIds = new Set([...memberOf.map(g => g.id), ...adminOf.map(g => g.id)]);
+  const totalGroups = allGroupIds.size;
 
   return (
     <div>

@@ -1,8 +1,17 @@
-import { useSelector } from 'react-redux';
-import { Card, Row, Col } from 'react-bootstrap';
+import { useDispatch, useSelector } from 'react-redux';
+import { Card, Row, Col, Button } from 'react-bootstrap';
+import { logout } from '../features/auth/authSlice';
+import { useNavigate } from 'react-router-dom';
 
 function ProfilePage() {
   const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/login');
+  };
 
   return (
     <div>
@@ -30,6 +39,12 @@ function ProfilePage() {
                   {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                 </p>
               </div>
+
+              <hr />
+              
+              <Button variant="danger" onClick={handleLogout} className="w-100">
+                Log Out
+              </Button>
             </Card.Body>
           </Card>
         </Col>
