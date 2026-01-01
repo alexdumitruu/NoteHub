@@ -1051,3 +1051,235 @@ body.dark-mode input[type="file"].form-control {
   color: var(--text-primary);
   margin-bottom: 1rem;
 }
+
+/* ========== Page Transitions ========== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Page content animation */
+main {
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* Cards entrance animation */
+.card,
+.stats-card,
+.group-card,
+.community-card,
+.profile-card,
+.note-card {
+  animation: fadeInUp 0.3s ease-out;
+  animation-fill-mode: both;
+}
+
+/* Staggered card animations */
+.card:nth-child(1) { animation-delay: 0s; }
+.card:nth-child(2) { animation-delay: 0.05s; }
+.card:nth-child(3) { animation-delay: 0.1s; }
+.card:nth-child(4) { animation-delay: 0.15s; }
+.card:nth-child(5) { animation-delay: 0.2s; }
+
+/* Notes list slide animation */
+.notes-list-col {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+/* Notes preview slide animation */
+.notes-preview-col {
+  animation: slideInRight 0.3s ease-out;
+}
+
+/* ========== Smooth Expand/Collapse for Notes ========== */
+
+/* Row container for smooth layout transitions */
+.row-animated {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+/* Notes list column - smooth hide/show */
+.notes-list-col {
+  flex: 0 0 33.333333%;
+  max-width: 33.333333%;
+  transition: flex 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+              max-width 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.4s ease,
+              transform 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+              margin 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: left center;
+  overflow: hidden;
+}
+
+.notes-list-col.hiding {
+  flex: 0 0 0%;
+  max-width: 0%;
+  opacity: 0;
+  transform: translateX(-20px);
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin: 0 !important;
+}
+
+/* Notes preview column - smooth expand */
+.notes-preview-col {
+  flex: 0 0 66.666667%;
+  max-width: 66.666667%;
+  transition: flex 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+              max-width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.notes-preview-col.expanded {
+  flex: 0 0 100%;
+  max-width: 100%;
+}
+
+/* Card inside notes list - smooth content fade */
+.notes-list-col .card {
+  transition: opacity 0.3s ease, transform 0.4s ease;
+}
+
+.notes-list-col.hiding .card {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+/* Page header animation */
+.page-header {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.page-title {
+  animation: slideInLeft 0.4s ease-out;
+}
+
+/* Modal animations */
+.modal.fade .modal-dialog {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+  transform: scale(0.9) translateY(-20px);
+}
+
+.modal.show .modal-dialog {
+  transform: scale(1) translateY(0);
+}
+
+/* Button hover animations */
+.btn {
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* List item animations */
+.list-group-item {
+  transition: background-color 0.2s ease, 
+              transform 0.2s ease,
+              box-shadow 0.2s ease;
+}
+
+.list-group-item:hover {
+  transform: translateX(4px);
+}
+
+/* Badge hover effect */
+.badge {
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.badge:hover {
+  transform: scale(1.05);
+}
+
+/* Smooth expand button icon rotation */
+.expand-btn {
+  transition: transform 0.3s ease;
+}
+
+.expand-btn:hover {
+  transform: rotate(90deg);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Loading skeleton animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-secondary) 25%,
+    var(--border-color) 50%,
+    var(--bg-secondary) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--border-radius-sm);
+}

@@ -40,13 +40,7 @@ function Dashboard() {
           <h1 className="page-title">Welcome back, {user?.full_name?.split(' ')[0] || 'Student'}! 👋</h1>
           <p className="page-subtitle">Here's what's happening with your notes today.</p>
         </div>
-        <div className="d-flex gap-2">
-          <Button 
-            variant="outline-secondary" 
-            className="d-flex align-items-center gap-2"
-          >
-            🔍 Search
-          </Button>
+        <div>
           <Button 
             variant="primary" 
             className="d-flex align-items-center gap-2"

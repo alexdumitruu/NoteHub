@@ -9,6 +9,7 @@ import NoteEditor from '../features/notes/NoteEditor';
 import Loading from '../components/common/Loading';
 import YouTubeCard from '../components/common/YouTubeCard';
 import { marked } from 'marked';
+import { FaExpand, FaCompress } from 'react-icons/fa';
 
 // Helper function to parse YouTube references from note content
 const parseYouTubeFromContent = (content) => {
@@ -38,6 +39,7 @@ function NotesPage() {
   const [editingNote, setEditingNote] = useState(null);
   const [activeTag, setActiveTag] = useState(null);
   const [sortBy, setSortBy] = useState('dateDesc');
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const { items: notes, isLoading, selectedNote, filters } = useSelector((state) => state.notes);
   const { items: courses } = useSelector((state) => state.courses);
@@ -189,9 +191,12 @@ function NotesPage() {
         </Button>
       </div>
 
-      <Row>
-        {/* Notes List */}
-        <Col md={4}>
+      <Row className="row-animated">
+        {/* Notes List - Slides out when expanded */}
+        <Col 
+          md={4} 
+          className={`col-animated notes-list-col ${isExpanded ? 'hiding' : ''}`}
+        >
           <Card className="shadow-sm border-0">
             <Card.Header>
               <InputGroup className="mb-2">
@@ -282,16 +287,26 @@ function NotesPage() {
         </Col>
 
         {/* Note Preview */}
-        <Col md={8}>
+        <Col 
+          md={isExpanded ? 12 : 8}
+          className={`notes-preview-col ${isExpanded ? 'expanded' : ''}`}
+        >
           {selectedNote ? (
             <Card className="shadow-sm border-0">
               <Card.Header className="d-flex justify-content-between align-items-center">
                 <h4 className="mb-0">{selectedNote.title}</h4>
-                <div>
+                <div className="d-flex align-items-center gap-2">
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    title={isExpanded ? "Collapse view" : "Expand view"}
+                  >
+                    {isExpanded ? <FaCompress /> : <FaExpand />}
+                  </Button>
                   <Button
                     variant="outline-primary"
                     size="sm"
-                    className="me-2"
                     onClick={() => handleEdit(selectedNote)}
                   >
                     ✏️ Edit
