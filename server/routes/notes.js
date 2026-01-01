@@ -52,9 +52,9 @@ const upload = multer({
   },
 });
 
-// Routes
-router.get("/", auth, noteController.getUserNotes);
+// Routes - IMPORTANT: Put specific routes before parameterized routes
 router.get("/public", noteController.getPublicNotes); // Public notes (no auth required)
+router.get("/", auth, noteController.getUserNotes);
 router.post("/", auth, upload.single("attachment"), noteController.createNote);
 router.put(
   "/:id",

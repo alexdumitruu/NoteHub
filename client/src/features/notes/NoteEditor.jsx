@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Card, Form, Button, Row, Col, Alert, Badge, Spinner } from 'react-bootstrap';
+import { Card, Form, Button, Row, Col, Alert, Badge, Spinner, Modal, InputGroup } from 'react-bootstrap';
 import { marked } from 'marked';
 import { createNote, updateNote, deleteAttachment, clearError } from './notesSlice';
+import YouTubeCard from '../../components/common/YouTubeCard';
+import api from '../../api/axios';
 
 /**
  * NoteEditor Component
@@ -27,6 +29,13 @@ function NoteEditor({ note, courses, groups = [], onClose }) {
   const [showPreview, setShowPreview] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
+  
+  // YouTube state
+  const [showYouTubeModal, setShowYouTubeModal] = useState(false);
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [youtubeLoading, setYoutubeLoading] = useState(false);
+  const [youtubeError, setYoutubeError] = useState('');
+  const [youtubeVideos, setYoutubeVideos] = useState([]);
 
   useEffect(() => {
     if (note) {
@@ -38,8 +47,28 @@ function NoteEditor({ note, courses, groups = [], onClose }) {
         is_public: note.is_public || false,
         group_id: note.group_id || '',
       });
+      
+      // Parse existing YouTube references from content
+      parseYouTubeFromContent(note.content || '');
     }
   }, [note]);
+
+  // Parse YouTube references embedded in content
+  const parseYouTubeFromContent = (content) => {
+    const youtubeRegex = /\[YOUTUBE:(\{.*?\})\]/g;
+    const matches = [];
+    let match;
+    while ((match = youtubeRegex.exec(content)) !== null) {
+      try {
+        matches.push(JSON.parse(match[1]));
+      } catch (e) {
+        console.error('Failed to parse YouTube reference', e);
+      }
+    }
+    if (matches.length > 0) {
+      setYoutubeVideos(matches);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -52,14 +81,12 @@ function NoteEditor({ note, courses, groups = [], onClose }) {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file size (10MB max)
       if (file.size > 10 * 1024 * 1024) {
         alert('File size must be less than 10MB');
         return;
       }
       setSelectedFile(file);
       
-      // Generate preview for images
       if (file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -83,11 +110,57 @@ function NoteEditor({ note, courses, groups = [], onClose }) {
     }
   };
 
+  // YouTube handling
+  const handleAddYouTube = async () => {
+    if (!youtubeUrl.trim()) {
+      setYoutubeError('Please enter a YouTube URL');
+      return;
+    }
+
+    setYoutubeLoading(true);
+    setYoutubeError('');
+
+    try {
+      const response = await api.post('/external/youtube', { url: youtubeUrl });
+      const videoData = response.data;
+      
+      // Add to videos list
+      setYoutubeVideos([...youtubeVideos, videoData]);
+      
+      // Close modal and reset
+      setShowYouTubeModal(false);
+      setYoutubeUrl('');
+    } catch (err) {
+      setYoutubeError(err.response?.data?.error || 'Failed to fetch YouTube metadata');
+    } finally {
+      setYoutubeLoading(false);
+    }
+  };
+
+  const handleRemoveYouTube = (index) => {
+    setYoutubeVideos(youtubeVideos.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Embed YouTube references in content
+    let finalContent = formData.content;
+    
+    // Remove old YouTube references
+    finalContent = finalContent.replace(/\[YOUTUBE:\{.*?\}\]\n?/g, '');
+    
+    // Add current YouTube references at the top
+    if (youtubeVideos.length > 0) {
+      const youtubeRefs = youtubeVideos.map(v => 
+        `[YOUTUBE:${JSON.stringify({ videoId: v.videoId, title: v.title, author: v.author, thumbnailUrl: v.thumbnailUrl, url: v.url })}]`
+      ).join('\n');
+      finalContent = youtubeRefs + '\n\n' + finalContent;
+    }
+
     const noteData = {
       ...formData,
+      content: finalContent,
       course_id: formData.course_id || null,
       group_id: formData.group_id || null,
       tags: formData.tags
@@ -109,7 +182,6 @@ function NoteEditor({ note, courses, groups = [], onClose }) {
     }
   };
 
-  // Configure marked for basic markdown rendering
   marked.setOptions({
     breaks: true,
     gfm: true,
@@ -117,7 +189,9 @@ function NoteEditor({ note, courses, groups = [], onClose }) {
 
   const getMarkdownPreview = () => {
     try {
-      return { __html: marked(formData.content || '') };
+      // Remove YouTube references from preview content
+      const cleanContent = formData.content.replace(/\[YOUTUBE:\{.*?\}\]\n?/g, '');
+      return { __html: marked(cleanContent || '') };
     } catch {
       return { __html: formData.content || '' };
     }
@@ -136,6 +210,19 @@ function NoteEditor({ note, courses, groups = [], onClose }) {
         <Alert variant="danger" onClose={() => dispatch(clearError())} dismissible>
           {error}
         </Alert>
+      )}
+
+      {/* YouTube References Display */}
+      {youtubeVideos.length > 0 && (
+        <div className="mb-3">
+          {youtubeVideos.map((video, index) => (
+            <YouTubeCard 
+              key={video.videoId || index} 
+              video={video} 
+              onRemove={() => handleRemoveYouTube(index)}
+            />
+          ))}
+        </div>
       )}
 
       <Card className="shadow-sm border-0">
@@ -188,13 +275,22 @@ function NoteEditor({ note, courses, groups = [], onClose }) {
             <Form.Group className="mb-3">
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <Form.Label className="mb-0">Content (Markdown supported)</Form.Label>
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  onClick={() => setShowPreview(!showPreview)}
-                >
-                  {showPreview ? '✏️ Edit' : '👁️ Preview'}
-                </Button>
+                <div className="d-flex gap-2">
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={() => setShowYouTubeModal(true)}
+                  >
+                    ▶ Add YouTube
+                  </Button>
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    onClick={() => setShowPreview(!showPreview)}
+                  >
+                    {showPreview ? '✏️ Edit' : '👁️ Preview'}
+                  </Button>
+                </div>
               </div>
 
               {showPreview ? (
@@ -238,7 +334,6 @@ function NoteEditor({ note, courses, groups = [], onClose }) {
                 Max file size: 10MB. Supported: JPEG, PNG, GIF, WebP, PDF
               </Form.Text>
               
-              {/* New file preview */}
               {selectedFile && (
                 <div className="mt-2 p-2 bg-light rounded d-flex align-items-center gap-2">
                   {filePreview ? (
@@ -290,7 +385,7 @@ function NoteEditor({ note, courses, groups = [], onClose }) {
               </Form.Group>
             )}
 
-            {/* Share with Group (if groups available) */}
+            {/* Share with Group */}
             {groups.length > 0 && (
               <Form.Group className="mb-3" controlId="group_id">
                 <Form.Label>Share with Study Group</Form.Label>
@@ -337,6 +432,53 @@ function NoteEditor({ note, courses, groups = [], onClose }) {
           </Form>
         </Card.Body>
       </Card>
+
+      {/* YouTube Modal */}
+      <Modal show={showYouTubeModal} onHide={() => setShowYouTubeModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>▶ Add YouTube Reference</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group>
+            <Form.Label>YouTube URL</Form.Label>
+            <InputGroup>
+              <Form.Control
+                type="url"
+                placeholder="https://www.youtube.com/watch?v=..."
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+              />
+            </InputGroup>
+            <Form.Text className="text-muted">
+              Paste a YouTube video link to add it as a reference
+            </Form.Text>
+          </Form.Group>
+          {youtubeError && (
+            <Alert variant="danger" className="mt-2 mb-0">
+              {youtubeError}
+            </Alert>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowYouTubeModal(false)}>
+            Cancel
+          </Button>
+          <Button 
+            variant="danger" 
+            onClick={handleAddYouTube}
+            disabled={youtubeLoading}
+          >
+            {youtubeLoading ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Fetching...
+              </>
+            ) : (
+              'Add Video'
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

@@ -85,6 +85,14 @@ function Sidebar() {
         </Nav.Link>
         <Nav.Link 
           as={NavLink} 
+          to="/community" 
+          style={navLinkStyle}
+          className="rounded mb-1"
+        >
+          🌍 Community
+        </Nav.Link>
+        <Nav.Link 
+          as={NavLink} 
           to="/profile" 
           style={navLinkStyle}
           className="rounded mb-1"

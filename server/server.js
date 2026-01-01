@@ -31,6 +31,7 @@ app.use("/api/auth", require("./routes/auth"));
 app.use("/api/notes", require("./routes/notes"));
 app.use("/api/courses", require("./routes/courses"));
 app.use("/api/groups", require("./routes/groups"));
+app.use("/api/external", require("./routes/external"));
 
 // 404 handler
 app.use((req, res) => {

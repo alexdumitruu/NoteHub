@@ -27,7 +27,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Handle both 401 (Access denied) and 400 (Invalid token) auth errors
+    if (
+      error.response?.status === 401 ||
+      (error.response?.status === 400 &&
+        error.response?.data?.error === "Invalid token")
+    ) {
       // Clear token and redirect to login on auth failure
       localStorage.removeItem("token");
       localStorage.removeItem("user");

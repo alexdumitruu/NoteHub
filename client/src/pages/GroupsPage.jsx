@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { Card, Row, Col, Button, ListGroup, Modal, Form, Alert } from 'react-bootstrap';
 import { fetchGroups, createGroup, clearError } from '../features/groups/groupsSlice';
 import Loading from '../components/common/Loading';
 
 function GroupsPage() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { memberOf, adminOf, isLoading, error } = useSelector((state) => state.groups);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({ name: '', description: '' });
@@ -56,12 +58,22 @@ function GroupsPage() {
                 </ListGroup.Item>
               ) : (
                 adminOf.map((group) => (
-                  <ListGroup.Item key={group.id} className="d-flex justify-content-between align-items-center">
+                  <ListGroup.Item 
+                    key={group.id} 
+                    className="d-flex justify-content-between align-items-center"
+                    action
+                    onClick={() => navigate(`/groups/${group.id}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <div>
                       <h6 className="mb-0">{group.name}</h6>
                       <small className="text-muted">{group.description || 'No description'}</small>
                     </div>
-                    <Button variant="outline-primary" size="sm">
+                    <Button 
+                      variant="outline-primary" 
+                      size="sm"
+                      onClick={(e) => { e.stopPropagation(); navigate(`/groups/${group.id}`); }}
+                    >
                       Manage
                     </Button>
                   </ListGroup.Item>
@@ -84,7 +96,12 @@ function GroupsPage() {
                 </ListGroup.Item>
               ) : (
                 memberOf.map((group) => (
-                  <ListGroup.Item key={group.id}>
+                  <ListGroup.Item 
+                    key={group.id}
+                    action
+                    onClick={() => navigate(`/groups/${group.id}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <h6 className="mb-0">{group.name}</h6>
                     <small className="text-muted">{group.description || 'No description'}</small>
                   </ListGroup.Item>

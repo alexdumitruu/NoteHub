@@ -13,6 +13,8 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
 import NotesPage from './pages/NotesPage';
 import GroupsPage from './pages/GroupsPage';
+import GroupDetailsPage from './pages/GroupDetailsPage';
+import CommunityPage from './pages/CommunityPage';
 import ProfilePage from './pages/ProfilePage';
 
 function App() {
@@ -43,6 +45,8 @@ function App() {
           <Route path="/notes" element={<NotesPage />} />
           <Route path="/notes/:id" element={<NotesPage />} />
           <Route path="/groups" element={<GroupsPage />} />
+          <Route path="/groups/:id" element={<GroupDetailsPage />} />
+          <Route path="/community" element={<CommunityPage />} />
           <Route path="/profile" element={<ProfilePage />} />
         </Route>
 
