@@ -7,6 +7,23 @@ import { fetchCourses } from '../features/courses/coursesSlice';
 import { fetchGroups } from '../features/groups/groupsSlice';
 import NoteEditor from '../features/notes/NoteEditor';
 import Loading from '../components/common/Loading';
+import YouTubeCard from '../components/common/YouTubeCard';
+import { marked } from 'marked';
+
+// Helper function to parse YouTube references from note content
+const parseYouTubeFromContent = (content) => {
+  const youtubeRegex = /\[YOUTUBE:(\{.*?\})\]/g;
+  const matches = [];
+  let match;
+  while ((match = youtubeRegex.exec(content)) !== null) {
+    try {
+      matches.push(JSON.parse(match[1]));
+    } catch (e) {
+      console.error('Failed to parse YouTube reference', e);
+    }
+  }
+  return matches;
+};
 
 /**
  * NotesPage Component - Main notes management page
@@ -311,6 +328,15 @@ function NotesPage() {
                   </div>
                 )}
 
+                {/* YouTube References Display */}
+                {parseYouTubeFromContent(selectedNote.content || '').length > 0 && (
+                  <div className="mb-3">
+                    {parseYouTubeFromContent(selectedNote.content || '').map((video, index) => (
+                      <YouTubeCard key={video.videoId || index} video={video} />
+                    ))}
+                  </div>
+                )}
+
                 {/* Attachments Display */}
                 {selectedNote.Attachments && selectedNote.Attachments.length > 0 && (
                   <div className="mb-3">
@@ -348,11 +374,20 @@ function NotesPage() {
 
                 <hr />
                 <div 
-                  className="note-content"
-                  style={{ whiteSpace: 'pre-wrap' }}
-                >
-                  {selectedNote.content || 'No content'}
-                </div>
+                  className="note-content markdown-preview"
+                  dangerouslySetInnerHTML={{ 
+                    __html: (() => {
+                      try {
+                        marked.setOptions({ breaks: true, gfm: true });
+                        // Remove YouTube markers before rendering
+                        const cleanContent = (selectedNote.content || '').replace(/\[YOUTUBE:\{.*?\}\]\n?/g, '');
+                        return marked(cleanContent);
+                      } catch {
+                        return selectedNote.content || 'No content';
+                      }
+                    })()
+                  }}
+                />
               </Card.Body>
             </Card>
           ) : (

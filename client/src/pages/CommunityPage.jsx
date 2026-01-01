@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Row, Col, Card, ListGroup, Badge, Modal, Button } from 'react-bootstrap';
+import { Row, Col, Button, Modal, Badge } from 'react-bootstrap';
 import { fetchPublicNotes } from '../features/notes/notesSlice';
 import Loading from '../components/common/Loading';
 import YouTubeCard from '../components/common/YouTubeCard';
 import { marked } from 'marked';
+import { FaGlobe, FaEye, FaArrowRight, FaSearch } from 'react-icons/fa';
 
 /**
  * CommunityPage Component - Display public notes from all users
@@ -14,6 +15,7 @@ function CommunityPage() {
   const { publicItems: notes, isLoading } = useSelector((state) => state.notes);
   const [selectedNote, setSelectedNote] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [activeFilter, setActiveFilter] = useState('all');
 
   useEffect(() => {
     dispatch(fetchPublicNotes());
@@ -51,72 +53,145 @@ function CommunityPage() {
     }
   };
 
+  // Get unique courses for filter tabs
+  const courses = [...new Set(notes.map(n => n.Course?.name).filter(Boolean))];
+  const filterTabs = ['All Notes', ...courses.slice(0, 4)];
+
+  // Color variants for cards
+  const gradientColors = [
+    'linear-gradient(to right, #4F6BF6, #8B5CF6)',
+    'linear-gradient(to right, #10B981, #06B6D4)',
+    'linear-gradient(to right, #F59E0B, #EF4444)',
+    'linear-gradient(to right, #EC4899, #8B5CF6)',
+    'linear-gradient(to right, #06B6D4, #3B82F6)'
+  ];
+  const getGradient = (index) => gradientColors[index % gradientColors.length];
+
   if (isLoading && notes.length === 0) {
     return <Loading message="Loading community notes..." />;
   }
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h1>🌍 Community Notes</h1>
-          <p className="text-muted mb-0">Discover notes shared by other students</p>
+      {/* Page Header */}
+      <div className="d-flex justify-content-between align-items-start mb-4">
+        <div className="d-flex align-items-center gap-3">
+          <div 
+            style={{ 
+              width: '48px', 
+              height: '48px', 
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #4F6BF6, #8B5CF6)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontSize: '1.25rem'
+            }}
+          >
+            <FaGlobe />
+          </div>
+          <div className="page-header">
+            <h1 className="page-title">Community Notes</h1>
+            <p className="page-subtitle">Discover knowledge shared by peers</p>
+          </div>
         </div>
-        <Badge bg="info" pill className="fs-6">
-          {notes.length} public notes
-        </Badge>
+        <div className="d-flex gap-2 align-items-center">
+          <div className="search-wrapper">
+            <FaSearch className="search-icon" />
+            <input 
+              type="text" 
+              className="form-control search-input" 
+              placeholder="Search topics..." 
+              style={{ paddingLeft: '2.5rem', width: '200px' }}
+            />
+          </div>
+          <Badge 
+            style={{ 
+              background: 'var(--bg-secondary)', 
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-color)',
+              padding: '0.5rem 1rem',
+              fontWeight: 500
+            }}
+          >
+            {notes.length} Public Notes
+          </Badge>
+        </div>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="filter-tabs">
+        {filterTabs.map((tab, index) => (
+          <div 
+            key={tab}
+            className={`filter-tab ${index === 0 ? 'active' : ''}`}
+            onClick={() => setActiveFilter(tab.toLowerCase())}
+          >
+            {tab}
+          </div>
+        ))}
       </div>
 
       {notes.length === 0 ? (
-        <Card className="shadow-sm border-0 text-center py-5">
-          <Card.Body>
-            <h5 className="text-muted">No public notes yet</h5>
-            <p className="text-muted">Be the first to share your notes with the community!</p>
-          </Card.Body>
-        </Card>
+        <div className="community-card" style={{ textAlign: 'center', padding: '3rem' }}>
+          <h5 style={{ color: 'var(--text-muted)' }}>No public notes yet</h5>
+          <p style={{ color: 'var(--text-muted)' }}>Be the first to share your notes with the community!</p>
+        </div>
       ) : (
-        <Row xs={1} md={2} lg={3} className="g-4">
-          {notes.map((note) => (
-            <Col key={note.id}>
-              <Card 
-                className="shadow-sm border-0 h-100" 
+        <Row className="g-4">
+          {notes.map((note, index) => (
+            <Col md={4} key={note.id}>
+              <div 
+                className="community-card"
                 style={{ cursor: 'pointer' }}
                 onClick={() => handleNoteClick(note)}
               >
-                <Card.Body>
-                  <Card.Title>{note.title}</Card.Title>
-                  <Card.Subtitle className="mb-2 text-muted">
-                    by {note.User?.full_name || 'Anonymous'}
-                  </Card.Subtitle>
-                  <Card.Text className="text-truncate" style={{ maxHeight: '60px', overflow: 'hidden' }}>
-                    {getCleanContent(note.content).substring(0, 150)}...
-                  </Card.Text>
-                  <div className="d-flex justify-content-between align-items-center mt-3">
-                    <div>
-                      {note.tags && note.tags.slice(0, 2).map((tag, i) => (
-                        <Badge key={i} bg="secondary" className="me-1">{tag}</Badge>
-                      ))}
-                    </div>
-                    <small className="text-muted">
-                      {note.Course?.name || 'General'}
-                    </small>
-                  </div>
-                  {/* Indicators for attachments and YouTube */}
-                  <div className="mt-2">
+                <div style={{ 
+                  position: 'absolute', 
+                  top: 0, 
+                  left: 0, 
+                  right: 0, 
+                  height: '4px', 
+                  background: getGradient(index),
+                  borderRadius: '12px 12px 0 0'
+                }} />
+                
+                <div className="d-flex justify-content-between align-items-start mb-2">
+                  <h5 style={{ fontWeight: 600, fontSize: '1rem', marginBottom: '0.25rem' }}>
+                    {note.title}
+                  </h5>
+                  <span className="badge-public">Public</span>
+                </div>
+                
+                <p className="card-author">by {note.User?.full_name || 'Anonymous'}</p>
+                
+                <p className="card-content">
+                  {getCleanContent(note.content).substring(0, 120)}...
+                </p>
+                
+                <div className="card-footer" style={{ background: 'transparent', border: 'none' }}>
+                  <div className="d-flex align-items-center gap-2">
+                    {note.tags && note.tags.slice(0, 2).map((tag, i) => (
+                      <span key={i} className="tag dark">{tag}</span>
+                    ))}
                     {note.Attachments && note.Attachments.length > 0 && (
-                      <Badge bg="info" className="me-1">📎 {note.Attachments.length}</Badge>
-                    )}
-                    {parseYouTubeFromContent(note.content || '').length > 0 && (
-                      <Badge bg="danger">▶ YouTube</Badge>
+                      <span className="tag primary">
+                        <FaEye className="me-1" /> {note.Attachments.length}
+                      </span>
                     )}
                   </div>
-                </Card.Body>
-                <Card.Footer className="bg-transparent">
-                  <small className="text-muted">
-                    {new Date(note.createdAt).toLocaleDateString()}
-                  </small>
-                </Card.Footer>
-              </Card>
+                </div>
+                
+                <div className="d-flex justify-content-between align-items-center mt-3 pt-3" style={{ borderTop: '1px solid var(--border-color)' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Updated: {new Date(note.updatedAt).toLocaleDateString()}
+                  </span>
+                  <span style={{ color: 'var(--primary)', fontSize: '0.875rem', fontWeight: 500 }}>
+                    Read Note <FaArrowRight style={{ marginLeft: '4px' }} />
+                  </span>
+                </div>
+              </div>
             </Col>
           ))}
         </Row>
@@ -129,7 +204,7 @@ function CommunityPage() {
             <Modal.Header closeButton>
               <div>
                 <Modal.Title>{selectedNote.title}</Modal.Title>
-                <small className="text-muted">
+                <small style={{ color: 'var(--text-muted)' }}>
                   by {selectedNote.User?.full_name || 'Anonymous'} • 
                   {selectedNote.Course?.name || 'General'} • 
                   {new Date(selectedNote.createdAt).toLocaleDateString()}
@@ -181,7 +256,7 @@ function CommunityPage() {
               {selectedNote.tags && selectedNote.tags.length > 0 && (
                 <div className="mb-3">
                   {selectedNote.tags.map((tag, i) => (
-                    <Badge key={i} bg="info" className="me-1">{tag}</Badge>
+                    <span key={i} className="tag primary">{tag}</span>
                   ))}
                 </div>
               )}
@@ -195,7 +270,7 @@ function CommunityPage() {
               />
             </Modal.Body>
             <Modal.Footer>
-              <Button variant="secondary" onClick={() => setShowModal(false)}>
+              <Button variant="outline-secondary" onClick={() => setShowModal(false)}>
                 Close
               </Button>
             </Modal.Footer>

@@ -3,7 +3,17 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { Nav, Button } from 'react-bootstrap';
 import { logout } from '../../features/auth/authSlice';
-import { FaMoon, FaSun } from 'react-icons/fa';
+import { 
+  FaMoon, 
+  FaSun, 
+  FaHome, 
+  FaStickyNote, 
+  FaUsers, 
+  FaGlobe, 
+  FaUser,
+  FaSignOutAlt,
+  FaCog
+} from 'react-icons/fa';
 
 function Sidebar() {
   const { user } = useSelector((state) => state.auth);
@@ -28,23 +38,31 @@ function Sidebar() {
     navigate('/login');
   };
 
-  const navLinkStyle = ({ isActive }) => ({
-    color: isActive ? '#0d6efd' : (darkMode ? '#adb5bd' : '#6c757d'),
-    backgroundColor: isActive ? (darkMode ? '#0d6efd20' : '#e7f1ff') : 'transparent',
-  });
+  // Get user initials for avatar
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
 
   return (
-    <div 
-      className={`d-flex flex-column border-end ${darkMode ? 'bg-dark text-white border-secondary' : 'bg-light'}`} 
-      style={{ width: '250px', minHeight: '100vh', transition: 'all 0.3s' }}
-    >
+    <div className="sidebar">
       {/* Brand */}
-      <div className={`p-3 border-bottom ${darkMode ? 'border-secondary' : ''} d-flex justify-content-between align-items-center`}>
-        <h4 className="mb-0 text-primary">📚 NoteHub</h4>
+      <div className="brand d-flex justify-content-between align-items-center">
+        <h4>
+          <span style={{ 
+            background: 'linear-gradient(135deg, #4F6BF6, #6366F1)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>
+            📘 NoteHub
+          </span>
+        </h4>
         <Button 
-          variant={darkMode ? "outline-light" : "outline-dark"} 
-          size="sm" 
+          variant="link"
+          className="p-1"
           onClick={toggleDarkMode}
+          style={{ color: 'var(--text-muted)' }}
           title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
         >
           {darkMode ? <FaSun /> : <FaMoon />}
@@ -52,64 +70,69 @@ function Sidebar() {
       </div>
 
       {/* User Info */}
-      <div className="p-3 border-bottom">
-        <p className="mb-0 fw-bold">{user?.full_name || 'User'}</p>
-        <small className="text-muted">{user?.email}</small>
+      <div className="user-info">
+        <div className="user-avatar">
+          {getInitials(user?.full_name)}
+        </div>
+        <div className="user-details">
+          <div className="user-name">{user?.full_name || 'User'}</div>
+          <div className="user-email">{user?.email}</div>
+        </div>
       </div>
 
       {/* Navigation */}
-      <Nav className="flex-column p-2 flex-grow-1">
+      <Nav className="flex-column">
         <Nav.Link 
           as={NavLink} 
-          to="/dashboard" 
-          style={navLinkStyle}
-          className="rounded mb-1"
+          to="/dashboard"
+          className="nav-link"
         >
-          🏠 Dashboard
+          <FaHome className="nav-icon" />
+          Dashboard
         </Nav.Link>
         <Nav.Link 
           as={NavLink} 
-          to="/notes" 
-          style={navLinkStyle}
-          className="rounded mb-1"
+          to="/notes"
+          className="nav-link"
         >
-          📝 My Notes
+          <FaStickyNote className="nav-icon" />
+          My Notes
         </Nav.Link>
         <Nav.Link 
           as={NavLink} 
-          to="/groups" 
-          style={navLinkStyle}
-          className="rounded mb-1"
+          to="/groups"
+          className="nav-link"
         >
-          👥 Study Groups
+          <FaUsers className="nav-icon" />
+          Study Groups
         </Nav.Link>
         <Nav.Link 
           as={NavLink} 
-          to="/community" 
-          style={navLinkStyle}
-          className="rounded mb-1"
+          to="/community"
+          className="nav-link"
         >
-          🌍 Community
+          <FaGlobe className="nav-icon" />
+          Community
         </Nav.Link>
         <Nav.Link 
           as={NavLink} 
-          to="/profile" 
-          style={navLinkStyle}
-          className="rounded mb-1"
+          to="/profile"
+          className="nav-link"
         >
-          👤 Profile
+          <FaUser className="nav-icon" />
+          Profile
         </Nav.Link>
       </Nav>
 
       {/* Logout Button */}
-      <div className="p-3 border-top">
-        <Button 
-          variant="outline-danger" 
-          className="w-100"
+      <div className="logout-section">
+        <button 
+          className="btn-logout"
           onClick={handleLogout}
         >
+          <FaSignOutAlt />
           Logout
-        </Button>
+        </button>
       </div>
     </div>
   );

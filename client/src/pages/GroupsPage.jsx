@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Card, Row, Col, Button, ListGroup, Modal, Form, Alert } from 'react-bootstrap';
+import { Row, Col, Button, Modal, Form, Alert, Badge } from 'react-bootstrap';
 import { fetchGroups, createGroup, clearError } from '../features/groups/groupsSlice';
 import Loading from '../components/common/Loading';
+import { FaPlus, FaArrowRight, FaCrown, FaUsers, FaEllipsisH } from 'react-icons/fa';
 
 function GroupsPage() {
   const dispatch = useDispatch();
@@ -25,16 +26,34 @@ function GroupsPage() {
     }
   };
 
+  // Get initials for group avatar
+  const getInitials = (name) => {
+    if (!name) return 'G';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  // Color variants for group cards
+  const avatarColors = ['purple', 'blue', 'green', 'coral'];
+  const getAvatarColor = (index) => avatarColors[index % avatarColors.length];
+
   if (isLoading && memberOf.length === 0 && adminOf.length === 0) {
     return <Loading message="Loading groups..." />;
   }
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1>Study Groups</h1>
-        <Button variant="primary" onClick={() => setShowModal(true)}>
-          ➕ Create Group
+      {/* Page Header */}
+      <div className="d-flex justify-content-between align-items-start mb-4">
+        <div className="page-header">
+          <h1 className="page-title">Study Groups</h1>
+          <p className="page-subtitle">Manage your groups and collaborate with peers.</p>
+        </div>
+        <Button 
+          variant="primary" 
+          className="d-flex align-items-center gap-2"
+          onClick={() => setShowModal(true)}
+        >
+          <FaPlus /> Create Group
         </Button>
       </div>
 
@@ -44,73 +63,142 @@ function GroupsPage() {
         </Alert>
       )}
 
-      <Row>
-        {/* Groups I Admin */}
-        <Col md={6}>
-          <Card className="shadow-sm border-0 mb-4">
-            <Card.Header className="bg-white">
-              <h5 className="mb-0">👑 Groups I Manage</h5>
-            </Card.Header>
-            <ListGroup variant="flush">
-              {adminOf.length === 0 ? (
-                <ListGroup.Item className="text-muted">
-                  You don't manage any groups yet
-                </ListGroup.Item>
-              ) : (
-                adminOf.map((group) => (
-                  <ListGroup.Item 
-                    key={group.id} 
-                    className="d-flex justify-content-between align-items-center"
-                    action
-                    onClick={() => navigate(`/groups/${group.id}`)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <div>
-                      <h6 className="mb-0">{group.name}</h6>
-                      <small className="text-muted">{group.description || 'No description'}</small>
+      {/* Groups I Manage */}
+      <div className="mb-4">
+        <h5 className="mb-3">
+          <FaCrown className="me-2" style={{ color: '#F59E0B' }} />
+          Groups I Manage
+        </h5>
+        {adminOf.length === 0 ? (
+          <div className="group-card" style={{ textAlign: 'center', padding: '2rem' }}>
+            <p style={{ color: 'var(--text-muted)' }}>You don't manage any groups yet</p>
+          </div>
+        ) : (
+          <Row className="g-3">
+            {adminOf.map((group, index) => (
+              <Col md={4} key={group.id}>
+                <div className="group-card">
+                  <div className="d-flex justify-content-between align-items-start mb-3">
+                    <div className={`group-avatar ${getAvatarColor(index)}`}>
+                      {getInitials(group.name)}
+                    </div>
+                    <Badge bg="success" pill>Active</Badge>
+                  </div>
+                  <h5 style={{ fontWeight: 600, marginBottom: '0.5rem' }}>{group.name}</h5>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                    {group.description || 'No description'}
+                  </p>
+                  <div className="d-flex justify-content-between align-items-center pt-3" style={{ borderTop: '1px solid var(--border-color)' }}>
+                    <div className="d-flex align-items-center gap-1">
+                      {/* Member avatars placeholder */}
+                      <div className="d-flex" style={{ marginLeft: '-8px' }}>
+                        {[0, 1, 2].map(i => (
+                          <div 
+                            key={i} 
+                            className={`member-avatar gradient-${(i % 5) + 1}`}
+                            style={{ width: '28px', height: '28px', fontSize: '0.6rem', marginLeft: '-8px', border: '2px solid var(--bg-secondary)' }}
+                          >
+                            {String.fromCharCode(65 + i)}
+                          </div>
+                        ))}
+                      </div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '4px' }}>+3</span>
                     </div>
                     <Button 
                       variant="outline-primary" 
                       size="sm"
-                      onClick={(e) => { e.stopPropagation(); navigate(`/groups/${group.id}`); }}
+                      onClick={() => navigate(`/groups/${group.id}`)}
                     >
                       Manage
                     </Button>
-                  </ListGroup.Item>
-                ))
-              )}
-            </ListGroup>
-          </Card>
-        </Col>
+                  </div>
+                </div>
+              </Col>
+            ))}
+          </Row>
+        )}
+      </div>
 
-        {/* Groups I'm Member Of */}
-        <Col md={6}>
-          <Card className="shadow-sm border-0 mb-4">
-            <Card.Header className="bg-white">
-              <h5 className="mb-0">👥 Groups I'm In</h5>
-            </Card.Header>
-            <ListGroup variant="flush">
-              {memberOf.length === 0 ? (
-                <ListGroup.Item className="text-muted">
-                  You haven't joined any groups yet
-                </ListGroup.Item>
-              ) : (
-                memberOf.map((group) => (
-                  <ListGroup.Item 
-                    key={group.id}
-                    action
-                    onClick={() => navigate(`/groups/${group.id}`)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <h6 className="mb-0">{group.name}</h6>
-                    <small className="text-muted">{group.description || 'No description'}</small>
-                  </ListGroup.Item>
-                ))
-              )}
-            </ListGroup>
-          </Card>
-        </Col>
-      </Row>
+      {/* Groups I'm In */}
+      <div className="mb-4">
+        <h5 className="mb-3">
+          <FaUsers className="me-2" style={{ color: 'var(--primary)' }} />
+          Groups I'm In
+        </h5>
+        {memberOf.length === 0 ? (
+          <div className="group-card" style={{ textAlign: 'center', padding: '2rem' }}>
+            <p style={{ color: 'var(--text-muted)' }}>You haven't joined any groups yet</p>
+          </div>
+        ) : (
+          <Row className="g-3">
+            {memberOf.map((group, index) => (
+              <Col md={4} key={group.id}>
+                <div className="group-card">
+                  <div className="d-flex justify-content-between align-items-start mb-3">
+                    <div className={`group-avatar ${getAvatarColor(index + 2)}`}>
+                      {getInitials(group.name)}
+                    </div>
+                    <Button variant="link" size="sm" style={{ color: 'var(--text-muted)', padding: 0 }}>
+                      <FaEllipsisH />
+                    </Button>
+                  </div>
+                  <h5 style={{ fontWeight: 600, marginBottom: '0.5rem' }}>{group.name}</h5>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                    {group.description || 'No description'}
+                  </p>
+                  <div className="d-flex justify-content-between align-items-center pt-3" style={{ borderTop: '1px solid var(--border-color)' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--accent-green)' }}>
+                      <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-green)', marginRight: '6px' }}></span>
+                      Online
+                    </span>
+                    <Button 
+                      variant="primary" 
+                      size="sm"
+                      className="d-flex align-items-center gap-1"
+                      onClick={() => navigate(`/groups/${group.id}`)}
+                    >
+                      Enter <FaArrowRight />
+                    </Button>
+                  </div>
+                </div>
+              </Col>
+            ))}
+            
+            {/* Join New Group Card */}
+            <Col md={4}>
+              <div 
+                className="group-card" 
+                style={{ 
+                  border: '2px dashed var(--border-color)', 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  minHeight: '180px',
+                  cursor: 'pointer'
+                }}
+                onClick={() => setShowModal(true)}
+              >
+                <div 
+                  style={{ 
+                    width: '48px', 
+                    height: '48px', 
+                    borderRadius: 'var(--border-radius-sm)', 
+                    background: 'var(--border-color)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '0.75rem'
+                  }}
+                >
+                  <FaPlus style={{ color: 'var(--text-muted)' }} />
+                </div>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Join new group</span>
+              </div>
+            </Col>
+          </Row>
+        )}
+      </div>
 
       {/* Create Group Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
@@ -141,7 +229,7 @@ function GroupsPage() {
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>
+            <Button variant="outline-secondary" onClick={() => setShowModal(false)}>
               Cancel
             </Button>
             <Button variant="primary" type="submit" disabled={isLoading}>

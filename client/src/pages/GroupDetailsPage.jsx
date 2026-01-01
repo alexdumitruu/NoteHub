@@ -2,15 +2,13 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
-  Card, 
+  Row, 
+  Col,
   Button, 
-  ListGroup, 
-  Badge, 
   Modal, 
   Form, 
   Alert,
-  Row,
-  Col,
+  Badge,
   Spinner
 } from 'react-bootstrap';
 import { 
@@ -24,6 +22,18 @@ import {
 import Loading from '../components/common/Loading';
 import YouTubeCard from '../components/common/YouTubeCard';
 import { marked } from 'marked';
+import { 
+  FaArrowLeft, 
+  FaCog, 
+  FaUserPlus, 
+  FaCrown, 
+  FaUsers,
+  FaPlus,
+  FaChevronRight,
+  FaCode,
+  FaList,
+  FaInfoCircle
+} from 'react-icons/fa';
 
 /**
  * GroupDetailsPage - View and manage a study group
@@ -105,13 +115,19 @@ function GroupDetailsPage() {
     }
   };
 
+  // Get user initials for avatar
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
   if (isLoading && !selectedGroup) {
     return <Loading message="Loading group details..." />;
   }
 
   if (error && !selectedGroup) {
     return (
-      <div className="text-center py-5">
+      <div style={{ textAlign: 'center', padding: '3rem' }}>
         <Alert variant="danger">{error}</Alert>
         <Button variant="primary" onClick={() => navigate('/groups')}>
           Back to Groups
@@ -128,25 +144,48 @@ function GroupDetailsPage() {
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
+      {/* Page Header */}
+      <div className="d-flex justify-content-between align-items-start mb-4">
+        <div className="d-flex align-items-center gap-3">
           <Button 
             variant="link" 
-            className="p-0 mb-2"
+            className="p-0"
+            style={{ color: 'var(--text-muted)' }}
             onClick={() => navigate('/groups')}
           >
-            ← Back to Groups
+            <FaArrowLeft size={20} />
           </Button>
-          <h1>{selectedGroup.name}</h1>
-          {selectedGroup.description && (
-            <p className="text-muted">{selectedGroup.description}</p>
+          <div>
+            <h1 className="page-title">{selectedGroup.name}</h1>
+            <p className="page-subtitle">
+              <span style={{ 
+                display: 'inline-block', 
+                width: '8px', 
+                height: '8px', 
+                borderRadius: '50%', 
+                background: 'var(--accent-green)', 
+                marginRight: '6px' 
+              }}></span>
+              Active Group • Updated {new Date(selectedGroup.updatedAt || Date.now()).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+        <div className="d-flex gap-2">
+          {isAdmin && (
+            <>
+              <Button variant="outline-secondary" className="d-flex align-items-center gap-2">
+                <FaCog /> Settings
+              </Button>
+              <Button 
+                variant="primary" 
+                className="d-flex align-items-center gap-2"
+                onClick={() => setShowInviteModal(true)}
+              >
+                <FaUserPlus /> Invite Member
+              </Button>
+            </>
           )}
         </div>
-        {isAdmin && (
-          <Button variant="primary" onClick={() => setShowInviteModal(true)}>
-            ➕ Invite Member
-          </Button>
-        )}
       </div>
 
       {error && (
@@ -155,96 +194,185 @@ function GroupDetailsPage() {
         </Alert>
       )}
 
-      <Row>
-        {/* Members Section */}
-        <Col md={4}>
-          <Card className="shadow-sm border-0 mb-4">
-            <Card.Header className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">👥 Members</h5>
-              <Badge bg="secondary">{selectedGroup.Members?.length || 0}</Badge>
-            </Card.Header>
-            <ListGroup variant="flush">
-              {/* Admin */}
-              {selectedGroup.Admin && (
-                <ListGroup.Item className="d-flex justify-content-between align-items-center">
-                  <div>
-                    <strong>{selectedGroup.Admin.full_name}</strong>
-                    <br />
-                    <small className="text-muted">{selectedGroup.Admin.email}</small>
-                  </div>
-                  <Badge bg="warning">Admin</Badge>
-                </ListGroup.Item>
-              )}
-              
-              {/* Other Members */}
-              {selectedGroup.Members?.filter(m => m.id !== selectedGroup.admin_user_id).map((member) => (
-                <ListGroup.Item key={member.id} className="d-flex justify-content-between align-items-center">
-                  <div>
-                    <span>{member.full_name}</span>
-                    <br />
-                    <small className="text-muted">{member.email}</small>
-                  </div>
-                  {isAdmin && member.id !== user?.id && (
-                    <Button 
-                      variant="outline-danger" 
-                      size="sm"
-                      onClick={() => handleRemoveMember(member.id)}
+      <Row className="g-4">
+        {/* Left Column - About & Notes */}
+        <Col md={8}>
+          {/* About Group Card */}
+          <div className="group-card mb-4" style={{ borderLeft: '4px solid var(--primary)' }}>
+            <h5 className="d-flex align-items-center gap-2 mb-3">
+              <FaInfoCircle style={{ color: 'var(--primary)' }} />
+              About Group
+            </h5>
+            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              {selectedGroup.description || 'This group is dedicated to collaborative learning and resource sharing. Join us to share notes, resources, and organize study sessions together!'}
+            </p>
+            <div className="d-flex gap-2 mt-3">
+              <span className="tag dark">HTML/CSS</span>
+              <span className="tag coral">JavaScript</span>
+              <span className="tag green">Project</span>
+            </div>
+          </div>
+
+          {/* Shared Notes Card */}
+          <div className="group-card">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h5 className="d-flex align-items-center gap-2 mb-0">
+                <FaList style={{ color: 'var(--primary)' }} />
+                Shared Notes
+              </h5>
+              <span style={{ color: 'var(--primary)', fontSize: '0.875rem', cursor: 'pointer' }}>
+                View all
+              </span>
+            </div>
+
+            {groupNotes.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                <p>No notes shared with this group yet.</p>
+                <p className="small">Share notes with this group from the Notes page!</p>
+              </div>
+            ) : (
+              <div>
+                {groupNotes.map((note, index) => (
+                  <div 
+                    key={note.id}
+                    className="d-flex align-items-center gap-3 p-3 mb-2"
+                    style={{ 
+                      background: 'var(--bg-primary)', 
+                      borderRadius: 'var(--border-radius-sm)',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => handleNoteClick(note)}
+                  >
+                    <div 
+                      style={{ 
+                        width: '40px', 
+                        height: '40px', 
+                        borderRadius: '8px',
+                        background: index % 2 === 0 ? 'rgba(79, 107, 246, 0.1)' : 'rgba(139, 92, 246, 0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: index % 2 === 0 ? 'var(--primary)' : '#8B5CF6'
+                      }}
                     >
-                      Remove
-                    </Button>
-                  )}
-                </ListGroup.Item>
-              ))}
-            </ListGroup>
-          </Card>
+                      <FaCode />
+                    </div>
+                    <div className="flex-grow-1">
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{note.title}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        Added by {note.User?.full_name || 'Unknown'} • {new Date(note.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <FaChevronRight style={{ color: 'var(--text-muted)' }} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </Col>
 
-        {/* Group Notes Section */}
-        <Col md={8}>
-          <Card className="shadow-sm border-0">
-            <Card.Header className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">📝 Shared Notes</h5>
-              <Badge bg="info">{groupNotes.length}</Badge>
-            </Card.Header>
-            <Card.Body>
-              {groupNotes.length === 0 ? (
-                <div className="text-center text-muted py-4">
-                  <p>No notes shared with this group yet.</p>
-                  <p className="small">Share notes with this group from the Notes page!</p>
+        {/* Right Column - Members */}
+        <Col md={4}>
+          <div className="group-card">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h5 className="d-flex align-items-center gap-2 mb-0">
+                <FaUsers style={{ color: 'var(--accent-coral)' }} />
+                Members
+              </h5>
+              <Badge 
+                pill 
+                style={{ 
+                  background: 'var(--primary-light)', 
+                  color: 'var(--primary)',
+                  fontWeight: 500
+                }}
+              >
+                {selectedGroup.Members?.length || 0}
+              </Badge>
+            </div>
+
+            {/* Admin */}
+            {selectedGroup.Admin && (
+              <div className="d-flex align-items-center gap-3 p-2 mb-2" style={{ borderRadius: 'var(--border-radius-sm)' }}>
+                <div className="member-avatar gradient-1">
+                  {getInitials(selectedGroup.Admin.full_name)}
                 </div>
-              ) : (
-                <Row xs={1} md={2} className="g-3">
-                  {groupNotes.map((note) => (
-                    <Col key={note.id}>
-                      <Card 
-                        className="h-100 border" 
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => handleNoteClick(note)}
-                      >
-                        <Card.Body>
-                          <Card.Title className="h6">{note.title}</Card.Title>
-                          <Card.Subtitle className="mb-2 text-muted small">
-                            by {note.User?.full_name || 'Unknown'}
-                          </Card.Subtitle>
-                          <Card.Text className="small text-truncate">
-                            {getCleanContent(note.content).substring(0, 100)}...
-                          </Card.Text>
-                          <div>
-                            {note.tags?.slice(0, 2).map((tag, i) => (
-                              <Badge key={i} bg="secondary" className="me-1">{tag}</Badge>
-                            ))}
-                            {note.Attachments?.length > 0 && (
-                              <Badge bg="info">📎 {note.Attachments.length}</Badge>
-                            )}
-                          </div>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                  ))}
-                </Row>
-              )}
-            </Card.Body>
-          </Card>
+                <div className="flex-grow-1">
+                  <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>
+                    {selectedGroup.Admin.full_name}
+                    <Badge 
+                      style={{ 
+                        marginLeft: '0.5rem',
+                        background: '#F59E0B',
+                        fontSize: '0.6rem',
+                        padding: '0.2rem 0.4rem'
+                      }}
+                    >
+                      ADMIN
+                    </Badge>
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    {selectedGroup.Admin.id === user?.id ? 'You' : selectedGroup.Admin.email}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Other Members */}
+            {selectedGroup.Members?.filter(m => m.id !== selectedGroup.admin_user_id).map((member, index) => (
+              <div 
+                key={member.id} 
+                className="d-flex align-items-center gap-3 p-2 mb-2" 
+                style={{ borderRadius: 'var(--border-radius-sm)' }}
+              >
+                <div className={`member-avatar gradient-${(index % 4) + 2}`}>
+                  {getInitials(member.full_name)}
+                </div>
+                <div className="flex-grow-1">
+                  <div style={{ fontWeight: 500, fontSize: '0.875rem' }}>{member.full_name}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{member.email}</div>
+                </div>
+                {isAdmin && member.id !== user?.id && (
+                  <Button 
+                    variant="link" 
+                    size="sm"
+                    style={{ color: 'var(--accent-coral)', padding: 0 }}
+                    onClick={() => handleRemoveMember(member.id)}
+                  >
+                    ×
+                  </Button>
+                )}
+              </div>
+            ))}
+
+            {/* Add new member button */}
+            {isAdmin && (
+              <div 
+                className="d-flex align-items-center gap-3 p-3 mt-3"
+                style={{ 
+                  border: '1px dashed var(--border-color)', 
+                  borderRadius: 'var(--border-radius-sm)',
+                  cursor: 'pointer'
+                }}
+                onClick={() => setShowInviteModal(true)}
+              >
+                <div 
+                  style={{ 
+                    width: '40px', 
+                    height: '40px', 
+                    borderRadius: '50%',
+                    background: 'var(--border-color)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <FaPlus style={{ color: 'var(--text-muted)' }} />
+                </div>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Add new member</span>
+              </div>
+            )}
+          </div>
         </Col>
       </Row>
 
@@ -264,7 +392,7 @@ function GroupDetailsPage() {
                 onChange={(e) => setInviteEmail(e.target.value)}
                 required
               />
-              <Form.Text className="text-muted">
+              <Form.Text style={{ color: 'var(--text-muted)' }}>
                 Enter the email of the student you want to invite
               </Form.Text>
             </Form.Group>
@@ -275,7 +403,7 @@ function GroupDetailsPage() {
             )}
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowInviteModal(false)}>
+            <Button variant="outline-secondary" onClick={() => setShowInviteModal(false)}>
               Cancel
             </Button>
             <Button variant="primary" type="submit" disabled={isLoading}>
@@ -299,7 +427,7 @@ function GroupDetailsPage() {
             <Modal.Header closeButton>
               <div>
                 <Modal.Title>{selectedNote.title}</Modal.Title>
-                <small className="text-muted">
+                <small style={{ color: 'var(--text-muted)' }}>
                   by {selectedNote.User?.full_name || 'Unknown'} • 
                   {selectedNote.Course?.name || 'General'} • 
                   {new Date(selectedNote.createdAt).toLocaleDateString()}
@@ -351,7 +479,7 @@ function GroupDetailsPage() {
               {selectedNote.tags && selectedNote.tags.length > 0 && (
                 <div className="mb-3">
                   {selectedNote.tags.map((tag, i) => (
-                    <Badge key={i} bg="info" className="me-1">{tag}</Badge>
+                    <span key={i} className="tag primary">{tag}</span>
                   ))}
                 </div>
               )}
@@ -365,7 +493,7 @@ function GroupDetailsPage() {
               />
             </Modal.Body>
             <Modal.Footer>
-              <Button variant="secondary" onClick={() => setShowNoteModal(false)}>
+              <Button variant="outline-secondary" onClick={() => setShowNoteModal(false)}>
                 Close
               </Button>
             </Modal.Footer>
