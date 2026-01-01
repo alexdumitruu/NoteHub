@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import api from "../../api/axios";
+import api, { uploadFile } from "../../api/axios";
 
 // Async thunks
 export const fetchNotes = createAsyncThunk(
@@ -16,12 +16,48 @@ export const fetchNotes = createAsyncThunk(
   }
 );
 
+export const fetchPublicNotes = createAsyncThunk(
+  "notes/fetchPublicNotes",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get("/notes/public");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error || "Failed to fetch public notes"
+      );
+    }
+  }
+);
+
+/**
+ * Create a new note with optional file attachment
+ * @param {Object} noteData - Note data object
+ * @param {File} [noteData.attachment] - Optional file attachment
+ */
 export const createNote = createAsyncThunk(
   "notes/createNote",
   async (noteData, { rejectWithValue }) => {
     try {
-      const response = await api.post("/notes", noteData);
-      return response.data;
+      const { attachment, ...data } = noteData;
+
+      if (attachment) {
+        // Use FormData for file uploads
+        const formData = new FormData();
+        formData.append("title", data.title);
+        formData.append("content", data.content || "");
+        formData.append("course_id", data.course_id || "");
+        formData.append("tags", JSON.stringify(data.tags || []));
+        formData.append("is_public", data.is_public || false);
+        formData.append("group_id", data.group_id || "");
+        formData.append("attachment", attachment);
+
+        const response = await uploadFile("/notes", formData, "post");
+        return response.data;
+      } else {
+        const response = await api.post("/notes", data);
+        return response.data;
+      }
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.error || "Failed to create note"
@@ -30,12 +66,30 @@ export const createNote = createAsyncThunk(
   }
 );
 
+/**
+ * Update an existing note with optional file attachment
+ * @param {Object} param0 - Object containing id and note data
+ */
 export const updateNote = createAsyncThunk(
   "notes/updateNote",
-  async ({ id, ...noteData }, { rejectWithValue }) => {
+  async ({ id, attachment, ...noteData }, { rejectWithValue }) => {
     try {
-      const response = await api.put(`/notes/${id}`, noteData);
-      return response.data;
+      if (attachment) {
+        // Use FormData for file uploads
+        const formData = new FormData();
+        formData.append("title", noteData.title);
+        formData.append("content", noteData.content || "");
+        formData.append("tags", JSON.stringify(noteData.tags || []));
+        formData.append("is_public", noteData.is_public || false);
+        formData.append("group_id", noteData.group_id || "");
+        formData.append("attachment", attachment);
+
+        const response = await uploadFile(`/notes/${id}`, formData, "put");
+        return response.data;
+      } else {
+        const response = await api.put(`/notes/${id}`, noteData);
+        return response.data;
+      }
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.error || "Failed to update note"
@@ -58,8 +112,23 @@ export const deleteNote = createAsyncThunk(
   }
 );
 
+export const deleteAttachment = createAsyncThunk(
+  "notes/deleteAttachment",
+  async ({ noteId, attachmentId }, { rejectWithValue }) => {
+    try {
+      await api.delete(`/notes/${noteId}/attachments/${attachmentId}`);
+      return { noteId, attachmentId };
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error || "Failed to delete attachment"
+      );
+    }
+  }
+);
+
 const initialState = {
   items: [],
+  publicItems: [],
   selectedNote: null,
   isLoading: false,
   error: null,
@@ -67,6 +136,7 @@ const initialState = {
     courseId: null,
     searchQuery: "",
     tags: [],
+    sortBy: "dateDesc", // dateDesc, dateAsc, titleAsc, titleDesc
   },
 };
 
@@ -102,6 +172,19 @@ const notesSlice = createSlice({
         state.items = action.payload;
       })
       .addCase(fetchNotes.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      // Fetch public notes
+      .addCase(fetchPublicNotes.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchPublicNotes.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.publicItems = action.payload;
+      })
+      .addCase(fetchPublicNotes.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })
@@ -154,6 +237,23 @@ const notesSlice = createSlice({
       .addCase(deleteNote.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
+      })
+      // Delete attachment
+      .addCase(deleteAttachment.fulfilled, (state, action) => {
+        const { noteId, attachmentId } = action.payload;
+        const note = state.items.find((n) => n.id === noteId);
+        if (note && note.Attachments) {
+          note.Attachments = note.Attachments.filter(
+            (a) => a.id !== attachmentId
+          );
+        }
+        if (
+          state.selectedNote?.id === noteId &&
+          state.selectedNote.Attachments
+        ) {
+          state.selectedNote.Attachments =
+            state.selectedNote.Attachments.filter((a) => a.id !== attachmentId);
+        }
       });
   },
 });

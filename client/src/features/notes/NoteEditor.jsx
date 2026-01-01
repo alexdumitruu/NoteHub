@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Card, Form, Button, Row, Col, Alert } from 'react-bootstrap';
+import { Card, Form, Button, Row, Col, Alert, Badge, Spinner } from 'react-bootstrap';
 import { marked } from 'marked';
-import { createNote, updateNote, clearError } from './notesSlice';
+import { createNote, updateNote, deleteAttachment, clearError } from './notesSlice';
 
-function NoteEditor({ note, courses, onClose }) {
+/**
+ * NoteEditor Component
+ * @param {Object} props
+ * @param {Object} [props.note] - Existing note to edit (null for new note)
+ * @param {Array} props.courses - Available courses
+ * @param {Array} [props.groups] - Available study groups
+ * @param {Function} props.onClose - Callback when editor closes
+ */
+function NoteEditor({ note, courses, groups = [], onClose }) {
   const dispatch = useDispatch();
   const { isLoading, error } = useSelector((state) => state.notes);
 
@@ -14,8 +22,11 @@ function NoteEditor({ note, courses, onClose }) {
     course_id: '',
     tags: '',
     is_public: false,
+    group_id: '',
   });
   const [showPreview, setShowPreview] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
 
   useEffect(() => {
     if (note) {
@@ -25,6 +36,7 @@ function NoteEditor({ note, courses, onClose }) {
         course_id: note.course_id || '',
         tags: Array.isArray(note.tags) ? note.tags.join(', ') : note.tags || '',
         is_public: note.is_public || false,
+        group_id: note.group_id || '',
       });
     }
   }, [note]);
@@ -37,16 +49,52 @@ function NoteEditor({ note, courses, onClose }) {
     });
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file size (10MB max)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size must be less than 10MB');
+        return;
+      }
+      setSelectedFile(file);
+      
+      // Generate preview for images
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setFilePreview(reader.result);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setFilePreview(null);
+      }
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
+  };
+
+  const handleDeleteAttachment = async (attachmentId) => {
+    if (window.confirm('Are you sure you want to delete this attachment?')) {
+      await dispatch(deleteAttachment({ noteId: note.id, attachmentId }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const noteData = {
       ...formData,
       course_id: formData.course_id || null,
+      group_id: formData.group_id || null,
       tags: formData.tags
         .split(',')
         .map((tag) => tag.trim())
         .filter((tag) => tag),
+      attachment: selectedFile,
     };
 
     let result;
@@ -178,11 +226,94 @@ function NoteEditor({ note, courses, onClose }) {
               )}
             </Form.Group>
 
+            {/* File Attachment Section */}
+            <Form.Group className="mb-3">
+              <Form.Label>📎 Attach File (Image or PDF)</Form.Label>
+              <Form.Control
+                type="file"
+                accept="image/*,.pdf"
+                onChange={handleFileChange}
+              />
+              <Form.Text className="text-muted">
+                Max file size: 10MB. Supported: JPEG, PNG, GIF, WebP, PDF
+              </Form.Text>
+              
+              {/* New file preview */}
+              {selectedFile && (
+                <div className="mt-2 p-2 bg-light rounded d-flex align-items-center gap-2">
+                  {filePreview ? (
+                    <img 
+                      src={filePreview} 
+                      alt="Preview" 
+                      style={{ maxHeight: '60px', maxWidth: '100px', objectFit: 'cover' }} 
+                    />
+                  ) : (
+                    <Badge bg="secondary">📄 PDF</Badge>
+                  )}
+                  <span className="flex-grow-1">{selectedFile.name}</span>
+                  <Button variant="outline-danger" size="sm" onClick={handleRemoveFile}>
+                    ✕
+                  </Button>
+                </div>
+              )}
+            </Form.Group>
+
+            {/* Existing attachments (edit mode) */}
+            {note?.Attachments && note.Attachments.length > 0 && (
+              <Form.Group className="mb-3">
+                <Form.Label>Existing Attachments</Form.Label>
+                <div className="d-flex flex-wrap gap-2">
+                  {note.Attachments.map((att) => (
+                    <div key={att.id} className="p-2 bg-light rounded d-flex align-items-center gap-2">
+                      {att.file_type === 'image' ? (
+                        <img 
+                          src={`http://localhost:3000${att.file_url}`} 
+                          alt={att.original_name}
+                          style={{ maxHeight: '50px', maxWidth: '80px', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <Badge bg="info">📄 PDF</Badge>
+                      )}
+                      <span style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {att.original_name}
+                      </span>
+                      <Button 
+                        variant="outline-danger" 
+                        size="sm" 
+                        onClick={() => handleDeleteAttachment(att.id)}
+                      >
+                        ✕
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </Form.Group>
+            )}
+
+            {/* Share with Group (if groups available) */}
+            {groups.length > 0 && (
+              <Form.Group className="mb-3" controlId="group_id">
+                <Form.Label>Share with Study Group</Form.Label>
+                <Form.Select
+                  name="group_id"
+                  value={formData.group_id}
+                  onChange={handleChange}
+                >
+                  <option value="">No group (private)</option>
+                  {groups.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.name}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            )}
+
             <Form.Group className="mb-4">
               <Form.Check
                 type="checkbox"
                 name="is_public"
-                label="Make this note public"
+                label="Make this note public (visible to all students)"
                 checked={formData.is_public}
                 onChange={handleChange}
               />
@@ -190,7 +321,14 @@ function NoteEditor({ note, courses, onClose }) {
 
             <div className="d-flex gap-2">
               <Button variant="primary" type="submit" disabled={isLoading}>
-                {isLoading ? 'Saving...' : note ? 'Update Note' : 'Create Note'}
+                {isLoading ? (
+                  <>
+                    <Spinner animation="border" size="sm" className="me-2" />
+                    Saving...
+                  </>
+                ) : (
+                  note ? 'Update Note' : 'Create Note'
+                )}
               </Button>
               <Button variant="outline-secondary" onClick={onClose}>
                 Cancel

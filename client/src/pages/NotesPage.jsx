@@ -1,12 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Row, Col, Card, Button, ListGroup, Badge, Form, InputGroup } from 'react-bootstrap';
-import { fetchNotes, selectNote, clearSelectedNote, deleteNote } from '../features/notes/notesSlice';
+import { fetchNotes, selectNote, clearSelectedNote, deleteNote, setFilters, clearFilters } from '../features/notes/notesSlice';
 import { fetchCourses } from '../features/courses/coursesSlice';
+import { fetchGroups } from '../features/groups/groupsSlice';
 import NoteEditor from '../features/notes/NoteEditor';
 import Loading from '../components/common/Loading';
 
+/**
+ * NotesPage Component - Main notes management page
+ * Features: Note list, preview, search, tag filtering, sorting
+ */
 function NotesPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -14,13 +19,26 @@ function NotesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showEditor, setShowEditor] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
+  const [activeTag, setActiveTag] = useState(null);
+  const [sortBy, setSortBy] = useState('dateDesc');
 
-  const { items: notes, isLoading, selectedNote } = useSelector((state) => state.notes);
+  const { items: notes, isLoading, selectedNote, filters } = useSelector((state) => state.notes);
   const { items: courses } = useSelector((state) => state.courses);
+  const { memberOf, adminOf } = useSelector((state) => state.groups);
+
+  // Combine member and admin groups
+  const allGroups = useMemo(() => {
+    const combined = [...(memberOf || []), ...(adminOf || [])];
+    // Remove duplicates based on id
+    return combined.filter((group, index, self) => 
+      index === self.findIndex((g) => g.id === group.id)
+    );
+  }, [memberOf, adminOf]);
 
   useEffect(() => {
     dispatch(fetchNotes());
     dispatch(fetchCourses());
+    dispatch(fetchGroups());
   }, [dispatch]);
 
   useEffect(() => {
@@ -64,12 +82,71 @@ function NotesPage() {
     navigate(`/notes/${note.id}`);
   };
 
-  // Filter notes based on search
-  const filteredNotes = notes.filter((note) => {
-    const matchesSearch = note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      note.content?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
-  });
+  const handleTagClick = (tag) => {
+    if (activeTag === tag) {
+      setActiveTag(null); // Toggle off
+    } else {
+      setActiveTag(tag);
+    }
+  };
+
+  const handleClearFilters = () => {
+    setActiveTag(null);
+    setSearchQuery('');
+    setSortBy('dateDesc');
+    dispatch(clearFilters());
+  };
+
+  // Filter and sort notes
+  const filteredAndSortedNotes = useMemo(() => {
+    let result = [...notes];
+
+    // Filter by search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter((note) =>
+        note.title.toLowerCase().includes(query) ||
+        note.content?.toLowerCase().includes(query)
+      );
+    }
+
+    // Filter by active tag
+    if (activeTag) {
+      result = result.filter((note) =>
+        note.tags && note.tags.includes(activeTag)
+      );
+    }
+
+    // Sort
+    switch (sortBy) {
+      case 'dateAsc':
+        result.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        break;
+      case 'titleAsc':
+        result.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+      case 'titleDesc':
+        result.sort((a, b) => b.title.localeCompare(a.title));
+        break;
+      case 'dateDesc':
+      default:
+        result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        break;
+    }
+
+    return result;
+  }, [notes, searchQuery, activeTag, sortBy]);
+
+  // Collect all unique tags from notes
+  const allTags = useMemo(() => {
+    const tagSet = new Set();
+    notes.forEach((note) => {
+      if (note.tags) {
+        note.tags.forEach((tag) => tagSet.add(tag));
+      }
+    });
+    return Array.from(tagSet).sort();
+  }, [notes]);
 
   if (isLoading && notes.length === 0) {
     return <Loading message="Loading notes..." />;
@@ -80,6 +157,7 @@ function NotesPage() {
       <NoteEditor
         note={editingNote}
         courses={courses}
+        groups={allGroups}
         onClose={handleEditorClose}
       />
     );
@@ -99,21 +177,56 @@ function NotesPage() {
         <Col md={4}>
           <Card className="shadow-sm border-0">
             <Card.Header>
-              <InputGroup>
+              <InputGroup className="mb-2">
                 <Form.Control
                   placeholder="Search notes..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </InputGroup>
+              <div className="d-flex justify-content-between align-items-center">
+                <Form.Select
+                  size="sm"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  style={{ width: 'auto' }}
+                >
+                  <option value="dateDesc">📅 Newest</option>
+                  <option value="dateAsc">📅 Oldest</option>
+                  <option value="titleAsc">🔤 A-Z</option>
+                  <option value="titleDesc">🔤 Z-A</option>
+                </Form.Select>
+                {(activeTag || searchQuery) && (
+                  <Button variant="outline-secondary" size="sm" onClick={handleClearFilters}>
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
             </Card.Header>
-            <ListGroup variant="flush" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-              {filteredNotes.length === 0 ? (
+            
+            {/* Tag Filter Bar */}
+            {allTags.length > 0 && (
+              <div className="p-2 border-bottom d-flex flex-wrap gap-1">
+                {allTags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    bg={activeTag === tag ? 'primary' : 'secondary'}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => handleTagClick(tag)}
+                  >
+                    {tag} {activeTag === tag && '✓'}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            <ListGroup variant="flush" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+              {filteredAndSortedNotes.length === 0 ? (
                 <ListGroup.Item className="text-muted text-center py-4">
                   No notes found
                 </ListGroup.Item>
               ) : (
-                filteredNotes.map((note) => (
+                filteredAndSortedNotes.map((note) => (
                   <ListGroup.Item
                     key={note.id}
                     action
@@ -136,9 +249,14 @@ function NotesPage() {
                         </div>
                       )}
                     </div>
-                    {note.is_public && (
-                      <Badge bg="success" pill>Public</Badge>
-                    )}
+                    <div className="d-flex flex-column align-items-end gap-1">
+                      {note.is_public && (
+                        <Badge bg="success" pill>Public</Badge>
+                      )}
+                      {note.Attachments && note.Attachments.length > 0 && (
+                        <Badge bg="info" pill>📎 {note.Attachments.length}</Badge>
+                      )}
+                    </div>
                   </ListGroup.Item>
                 ))
               )}
@@ -180,10 +298,54 @@ function NotesPage() {
                 {selectedNote.tags && selectedNote.tags.length > 0 && (
                   <div className="mb-3">
                     {selectedNote.tags.map((tag, i) => (
-                      <Badge key={i} bg="info" className="me-1">{tag}</Badge>
+                      <Badge 
+                        key={i} 
+                        bg={activeTag === tag ? 'primary' : 'info'} 
+                        className="me-1"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => handleTagClick(tag)}
+                      >
+                        {tag}
+                      </Badge>
                     ))}
                   </div>
                 )}
+
+                {/* Attachments Display */}
+                {selectedNote.Attachments && selectedNote.Attachments.length > 0 && (
+                  <div className="mb-3">
+                    <h6>📎 Attachments</h6>
+                    <div className="d-flex flex-wrap gap-2">
+                      {selectedNote.Attachments.map((att) => (
+                        <div key={att.id}>
+                          {att.file_type === 'image' ? (
+                            <a 
+                              href={`http://localhost:3000${att.file_url}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                            >
+                              <img 
+                                src={`http://localhost:3000${att.file_url}`} 
+                                alt={att.original_name}
+                                style={{ maxHeight: '150px', maxWidth: '200px', objectFit: 'cover', borderRadius: '8px' }}
+                              />
+                            </a>
+                          ) : (
+                            <a 
+                              href={`http://localhost:3000${att.file_url}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="btn btn-outline-secondary btn-sm"
+                            >
+                              📄 {att.original_name}
+                            </a>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <hr />
                 <div 
                   className="note-content"

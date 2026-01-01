@@ -37,4 +37,24 @@ api.interceptors.response.use(
   }
 );
 
+/**
+ * Helper function for multipart/form-data requests (file uploads)
+ * @param {string} url - API endpoint
+ * @param {FormData} formData - FormData object containing files and data
+ * @param {string} method - HTTP method ('post' or 'put')
+ * @returns {Promise} - Axios response promise
+ */
+export const uploadFile = async (url, formData, method = "post") => {
+  const token = localStorage.getItem("token");
+  return axios({
+    method,
+    url: `${API_BASE_URL}${url}`,
+    data: formData,
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: token ? `Bearer ${token}` : "",
+    },
+  });
+};
+
 export default api;

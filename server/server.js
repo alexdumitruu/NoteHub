@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const sequelize = require("./config/database");
 const DB_Init = require("./config/dbInit");
 
@@ -13,6 +14,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve uploaded files statically
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // Health check route
 app.get("/api/health", (req, res) => {
   res.json({
@@ -23,10 +27,10 @@ app.get("/api/health", (req, res) => {
 });
 
 // Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/notes', require('./routes/notes'));
-app.use('/api/courses', require('./routes/courses'));
-app.use('/api/groups', require('./routes/groups'));
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/notes", require("./routes/notes"));
+app.use("/api/courses", require("./routes/courses"));
+app.use("/api/groups", require("./routes/groups"));
 
 // 404 handler
 app.use((req, res) => {
