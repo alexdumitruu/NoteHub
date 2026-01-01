@@ -36,7 +36,7 @@ function ProfilePage() {
               <div className="mb-3">
                 <label className="text-muted small">Member Since</label>
                 <p className="mb-0">
-                  {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                  {user?.createdAt || user?.created_at ? new Date(user.createdAt || user.created_at).toLocaleDateString() : 'N/A'}
                 </p>
               </div>
 
