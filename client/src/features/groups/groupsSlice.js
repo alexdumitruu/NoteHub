@@ -106,6 +106,14 @@ const groupsSlice = createSlice({
       state.selectedGroup = null;
       state.groupNotes = [];
     },
+    clearGroups: (state) => {
+      state.memberOf = [];
+      state.adminOf = [];
+      state.selectedGroup = null;
+      state.groupNotes = [];
+      state.isLoading = false;
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -193,5 +201,6 @@ const groupsSlice = createSlice({
   },
 });
 
-export const { clearError, clearSelectedGroup } = groupsSlice.actions;
+export const { clearError, clearSelectedGroup, clearGroups } =
+  groupsSlice.actions;
 export default groupsSlice.reducer;

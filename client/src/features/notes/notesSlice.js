@@ -159,6 +159,14 @@ const notesSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    clearNotes: (state) => {
+      state.items = [];
+      state.publicItems = [];
+      state.selectedNote = null;
+      state.isLoading = false;
+      state.error = null;
+      state.filters = initialState.filters;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -264,5 +272,6 @@ export const {
   setFilters,
   clearFilters,
   clearError,
+  clearNotes,
 } = notesSlice.actions;
 export default notesSlice.reducer;

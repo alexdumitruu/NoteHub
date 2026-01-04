@@ -43,6 +43,11 @@ const coursesSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    clearCourses: (state) => {
+      state.items = [];
+      state.isLoading = false;
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -75,5 +80,5 @@ const coursesSlice = createSlice({
   },
 });
 
-export const { clearError } = coursesSlice.actions;
+export const { clearError, clearCourses } = coursesSlice.actions;
 export default coursesSlice.reducer;

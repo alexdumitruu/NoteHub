@@ -3,6 +3,9 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { Nav, Button } from 'react-bootstrap';
 import { logout } from '../../features/auth/authSlice';
+import { clearNotes } from '../../features/notes/notesSlice';
+import { clearGroups } from '../../features/groups/groupsSlice';
+import { clearCourses } from '../../features/courses/coursesSlice';
 import { 
   FaMoon, 
   FaSun, 
@@ -34,6 +37,10 @@ function Sidebar() {
   const toggleDarkMode = () => setDarkMode(!darkMode);
 
   const handleLogout = () => {
+    // Clear all Redux state before logging out to prevent data leakage
+    dispatch(clearNotes());
+    dispatch(clearGroups());
+    dispatch(clearCourses());
     dispatch(logout());
     navigate('/login');
   };
