@@ -10,7 +10,7 @@
 - [x] Define Project Specifications (`SPECIFICATIONS.md`).
 - [x] Create Project Plan (`PROJECT_PLAN.md`).
 - [x] Initialize Node.js project structure (`package.json`, folder hierarchy).
-- [] Initialize React project structure.
+- [x] Initialize React project structure.
 
 ### Phase 2: Backend Implementation (Due: 06.12.2025)
 
@@ -20,21 +20,21 @@
 
 - [x] Setup MariaDB database connection.
 - [x] Configure Sequelize ORM.
-- [ ] Define User and Note models.
-- [ ] Implement Registration (with `@stud.ase.ro` regex validation).
-- [ ] Implement Login (JWT generation).
+- [x] Define User and Note models.
+- [x] Implement Registration (with `@stud.ase.ro` regex validation).
+- [x] Implement Login (JWT generation).
 
 #### Week 2: Core Logic & API
 
-- [ ] Implement CRUD endpoints for Notes (GET, POST, PUT, DELETE).
-- [ ] Implement filtering logic (by course/tag).
-- [ ] External Service: Implement YouTube API integration route.
+- [x] Implement CRUD endpoints for Notes (GET, POST, PUT, DELETE).
+- [x] Implement filtering logic (by course/tag).
+- [x] External Service: Implement YouTube API integration route.
 
 #### Week 3: Testing & Documentation
 
-- [ ] Test all endpoints with Postman.
-- [ ] Write API documentation (simple README instructions).
-- [ ] Milestone Delivery: Submit repository link with functional Backend.
+- [] Test all endpoints with Postman.
+- [x] Write API documentation (simple README instructions).
+- [x] Milestone Delivery: Submit repository link with functional Backend.
 
 ### Phase 3: Frontend Implementation (Dec 2025 - Jan 2026)
 
@@ -42,29 +42,29 @@
 
 #### Week 4: UI Skeleton
 
-- [ ] Setup React Router.
-- [ ] Create Login/Register pages.
-- [ ] Create Dashboard Layout (Sidebar + Main Content).
+- [x] Setup React Router.
+- [x] Create Login/Register pages.
+- [x] Create Dashboard Layout (Sidebar + Main Content).
 
 #### Week 5: The Editor
 
-- [ ] Implement Markdown Editor component.
-- [ ] Connect Frontend to Backend (`GET /notes` and `POST /notes`).
-- [ ] Implement Note viewing and deletion.
+- [x] Implement Markdown Editor component.
+- [x] Connect Frontend to Backend (`GET /notes` and `POST /notes`).
+- [x] Implement Note viewing and deletion.
 
 #### Week 6: Advanced Features
 
-- [ ] Add support for Tagging and Course selection.
-- [ ] Implement the "Add YouTube Reference" UI.
-- [ ] Implement Study Groups UI.
+- [x] Add support for Tagging and Course selection.
+- [x] Implement the "Add YouTube Reference" UI.
+- [x] Implement Study Groups UI.
 
 ### Phase 4: Refinement & Deployment (Final Tutorial)
 
 **Objective:** Polish the application and deploy to the cloud.
 
-- [ ] Bug Fixing: Ensure all edge cases are handled.
-- [ ] Styling: Finalize CSS/Bootstrap design for mobile responsiveness.
-- [ ] Deployment:
+- [x] Bug Fixing: Ensure all edge cases are handled.
+- [x] Styling: Finalize CSS/Bootstrap design for mobile responsiveness.
+- [] Deployment:
   - Deploy Database
   - Deploy Backend
   - Deploy Frontend
