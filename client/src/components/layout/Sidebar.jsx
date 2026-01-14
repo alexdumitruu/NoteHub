@@ -62,7 +62,7 @@ function Sidebar() {
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
           }}>
-            📘 NoteHub
+          NoteHub
           </span>
         </h4>
         <Button 
@@ -77,7 +77,12 @@ function Sidebar() {
       </div>
 
       {/* User Info */}
-      <div className="user-info">
+      <div 
+        className="user-info" 
+        onClick={() => navigate('/profile')}
+        style={{ cursor: 'pointer' }}
+        title="Go to Profile"
+      >
         <div className="user-avatar">
           {getInitials(user?.full_name)}
         </div>

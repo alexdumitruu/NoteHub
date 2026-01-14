@@ -9,7 +9,7 @@ import NoteEditor from '../features/notes/NoteEditor';
 import Loading from '../components/common/Loading';
 import YouTubeCard from '../components/common/YouTubeCard';
 import { marked } from 'marked';
-import { FaExpand, FaCompress } from 'react-icons/fa';
+import { FaExpand, FaCompress, FaPlus } from 'react-icons/fa';
 
 // Helper function to parse YouTube references from note content
 const parseYouTubeFromContent = (content) => {
@@ -186,8 +186,12 @@ function NotesPage() {
     <div>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>My Notes</h1>
-        <Button variant="primary" onClick={handleCreateNew}>
-          ➕ New Note
+        <Button 
+          variant="primary" 
+          className="d-flex align-items-center gap-2"
+          onClick={handleCreateNew}
+        >
+          <FaPlus /> New Note
         </Button>
       </div>
 

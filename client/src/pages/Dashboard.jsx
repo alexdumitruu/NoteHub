@@ -35,10 +35,34 @@ function Dashboard() {
   return (
     <div>
       {/* Page Header */}
-      <div className="d-flex justify-content-between align-items-start mb-4">
-        <div className="page-header">
-          <h1 className="page-title">Welcome back, {user?.full_name?.split(' ')[0] || 'Student'}! 👋</h1>
-          <p className="page-subtitle">Here's what's happening with your notes today.</p>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="d-flex align-items-center gap-3">
+          <div className="page-header">
+            <h1 className="page-title">Welcome back, {user?.full_name?.split(' ')[0] || 'Student'}!</h1>
+            <p className="page-subtitle">Here's what's happening with your notes today.</p>
+          </div>
+          <div 
+            onClick={() => navigate('/profile')}
+            style={{ 
+              cursor: 'pointer',
+              width: '56px',
+              height: '56px',
+              fontSize: '1.25rem',
+              flexShrink: 0,
+              marginLeft: '0.5rem',
+              marginBottom: '2.5rem',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #4F6BF6, #8B5CF6)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontWeight: 600
+            }}
+            title="Go to Profile"
+          >
+            {user?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
+          </div>
         </div>
         <div>
           <Button 
