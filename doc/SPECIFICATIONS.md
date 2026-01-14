@@ -23,7 +23,7 @@ The application follows a standard Single Page Application (SPA) architecture:
 
 - **Frontend:** React.js (Component-based framework)
 - **Routing:** React Router
-- **State Management:** React Context API or Redux
+- **State Management:** Redux (Redux Toolkit)
 - **Styling:** CSS Modules / Bootstrap CSS
 - **Backend:** Node.js with Express.js
 - **Database:** MariaDB
@@ -36,22 +36,27 @@ The application follows a standard Single Page Application (SPA) architecture:
 The application uses a relational database. Below are the core entities:
 
 - **Users**
-	- id (PK), email (Unique, must match @stud.ase.ro), password_hash, full_name, created_at.
+
+  - id (PK), email (Unique, must match @stud.ase.ro), password_hash, full_name, created_at.
 
 - **Courses**
-	- id (PK), name (e.g., "Web Technologies"), semester, teacher_name.
+
+  - id (PK), name (e.g., "Web Technologies"), semester, teacher_name.
 
 - **Notes**
-	- id (PK), user_id (FK), course_id (FK), title, content (Text/Markdown), tags (String/JSON), is_public (Boolean), created_at, updated_at.
+
+  - id (PK), user_id (FK), course_id (FK), title, content (Text/Markdown), tags (String/JSON), is_public (Boolean), created_at, updated_at.
 
 - **Attachments**
-	- id (PK), note_id (FK), file_url, file_type (image/pdf).
+
+  - id (PK), note_id (FK), file_url, file_type (image/pdf).
 
 - **StudyGroups**
-	- id (PK), name, admin_user_id (FK), description.
+
+  - id (PK), name, admin_user_id (FK), description.
 
 - **GroupMembers (Junction Table)**
-	- group_id (FK), user_id (FK), joined_at.
+  - group_id (FK), user_id (FK), joined_at.
 
 ## 4. Functional Requirements
 
@@ -85,6 +90,17 @@ The application uses a relational database. Below are the core entities:
 - Create Group: A user can start a study group.
 - Invite: Add other users to the group (by email).
 - Share: Users can share specific notes with their groups.
+
+### 4.6 Community Hub
+
+- Browse: Users can view all public notes shared by the community.
+- Search & Filter: Filter community notes by course, tags, or search query.
+- View: Click on any public note to read the full content.
+
+### 4.7 Dark/Light Mode
+
+- Toggle: Users can switch between dark and light themes via a button in the sidebar.
+- Persistence: Theme preference is saved in localStorage and persists across sessions.
 
 ## 5. External API Specification
 
