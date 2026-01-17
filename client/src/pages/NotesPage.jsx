@@ -184,8 +184,11 @@ function NotesPage() {
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1>My Notes</h1>
+      <div className="d-flex justify-content-between align-items-start mb-4">
+        <div className="page-header">
+          <h1 className="page-title">My Notes</h1>
+          <p className="page-subtitle">Create, edit, and organize your study notes.</p>
+        </div>
         <Button 
           variant="primary" 
           className="d-flex align-items-center gap-2"

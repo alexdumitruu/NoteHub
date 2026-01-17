@@ -5,6 +5,14 @@ const path = require("path");
 const noteController = require("../controllers/noteController");
 const auth = require("../middleware/auth");
 
+/**
+ * Notes Routes
+ * Handles all CRUD operations for notes including file attachments.
+ *
+ * File uploads: Multer configured for images (JPEG, PNG, GIF, WebP) and PDFs.
+ * Max file size: 10MB
+ */
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -37,9 +45,9 @@ const fileFilter = (req, file, cb) => {
   } else {
     cb(
       new Error(
-        "Invalid file type. Only images (JPEG, PNG, GIF, WebP) and PDFs are allowed."
+        "Invalid file type. Only images (JPEG, PNG, GIF, WebP) and PDFs are allowed.",
       ),
-      false
+      false,
     );
   }
 };
@@ -52,7 +60,7 @@ const upload = multer({
   },
 });
 
-// Routes - IMPORTANT: Put specific routes before parameterized routes
+// Routes
 router.get("/public", noteController.getPublicNotes); // Public notes (no auth required)
 router.get("/", auth, noteController.getUserNotes);
 router.post("/", auth, upload.single("attachment"), noteController.createNote);
@@ -60,13 +68,13 @@ router.put(
   "/:id",
   auth,
   upload.single("attachment"),
-  noteController.updateNote
+  noteController.updateNote,
 );
 router.delete("/:id", auth, noteController.deleteNote);
 router.delete(
   "/:noteId/attachments/:attachmentId",
   auth,
-  noteController.deleteAttachment
+  noteController.deleteAttachment,
 );
 
 module.exports = router;
